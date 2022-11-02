@@ -10,9 +10,10 @@ public class Board
     private readonly int _columns;
     private readonly int _mines;
     private readonly Cell[,] _board;
-    readonly int[][] _mineCoords;
+    private readonly int[][] _mineCoords;
     private int _remainingCells;
-    
+    public int times = 0;
+
     public Board(int rows, int columns, int mines)
     {
         _rows = rows;
@@ -25,20 +26,15 @@ public class Board
         _remainingCells -= _mines;
     }
 
-    public string PlayMove(int[] coords)
+    public string PlayMoveIterative(int[] coords)
     {
-        if (coords[0] >= _rows || coords[1] >= _columns)
+        if (coords[0] > _rows || coords[1] > _columns|| coords[0] < 1 || coords[1] < 1 )
             throw new InvalidMoveException();
         
         string gameState;
-        Cell cell = _board[coords[0], coords[1]];
+        Cell cell = _board[coords[0] - 1, coords[1] - 1];
         cell.Reveal();
 
-        if (cell.IsEmpty())
-        {
-            RevealSurroundingCells(coords);
-        }
-        
         if (cell.IsMine)
         {
             gameState = Constants.GameState.Lost;
@@ -46,14 +42,17 @@ public class Board
         }
         else
         {
+            if (cell.IsEmpty())
+            {
+                RevealSurroundingCellsIterative(coords);
+            }
             _remainingCells -= 1;
             gameState = _remainingCells == 0 ? Constants.GameState.Won : Constants.GameState.InProgress;
         }
-
         return gameState;
     }
 
-    private void RevealSurroundingCells(int[] coords)
+    private void RevealSurroundingCellsIterative(int[] coords)
     {
         var cellQueue = new Queue<int[]>();
         foreach (var surroundingCell in GetSurroundingCells(coords))
@@ -63,6 +62,7 @@ public class Board
         
         while (cellQueue.Any())
         {
+            times += 1;
             var cellCoords = cellQueue.Dequeue();
             var cell = _board[cellCoords[0], cellCoords[1]];
             var revealedNow = cell.Reveal();
@@ -81,6 +81,54 @@ public class Board
         }
     }
 
+
+
+    
+    public string PlayMoveRecursive(int[] coords)
+    {
+        if (coords[0] > _rows || coords[1] > _columns|| coords[0] < 1 || coords[1] < 1 )
+            throw new InvalidMoveException();
+        
+        string gameState;
+        Cell cell = _board[coords[0] - 1, coords[1] - 1];
+        cell.Reveal();
+
+        if (cell.IsMine)
+        {
+            gameState = Constants.GameState.Lost;
+            RevealMines();
+        }
+        else
+        {
+            if (cell.IsEmpty())
+            {
+                RevealSurroundingCellsRecursive(coords);
+            }
+            _remainingCells -= 1;
+            gameState = _remainingCells == 0 ? Constants.GameState.Won : Constants.GameState.InProgress;
+        }
+        return gameState;
+    }
+    private void RevealSurroundingCellsRecursive(int[] coords)
+    {
+        times += 1;
+        var cell = _board[coords[0], coords[1]];
+        var revealedNow = cell.Reveal();
+        if (revealedNow)
+        {
+            _remainingCells--;
+            if (cell.IsEmpty())
+            {
+                var surroundingCells = GetSurroundingCells(coords);
+                foreach (var surroundingCell in surroundingCells)
+                {
+                    RevealSurroundingCellsRecursive(surroundingCell);
+                }
+            }
+        }
+
+    }
+
     private void RevealMines()
     {
         foreach (var mine in _mineCoords)
@@ -89,8 +137,8 @@ public class Board
         }
     }
 
-
-    // Board display and generation
+    
+    
     
     private void GenerateBoard()
     {
@@ -112,23 +160,9 @@ public class Board
                 remainingCells--;
             }
         }
-
         IncrementCells(_mineCoords);
     }
 
-    private void IncrementCells(int[][] mineCoords)
-    {
-        foreach (var mine in mineCoords)
-        {
-            var cells = GetSurroundingCells(mine);
-            foreach (var cell in cells)
-            {
-                if(cell != null)
-                    _board[cell[0], cell[1]].Increment();
-            }
-            
-        }
-    }
     private List<int[]> GetSurroundingCells(int[] cell)
     {
         List<int[]> cellCoords = new List<int[]>();
@@ -163,6 +197,23 @@ public class Board
 
         return cellCoords;
     }
+    
+    
+    
+    
+    private void IncrementCells(int[][] mineCoords)
+    {
+        foreach (var mine in mineCoords)
+        {
+            var cells = GetSurroundingCells(mine);
+            foreach (var cell in cells)
+            {
+                if(cell != null)
+                    _board[cell[0], cell[1]].Increment();
+            }
+            
+        }
+    }
 
     private Cell GenerateCell(int remainingCells, int remainingMines)
     {
@@ -187,7 +238,7 @@ public class Board
         boardBuilder.Append("  ");
         for (int column = 0; column < _columns; column++)
         {
-            boardBuilder.Append($"     {column}");
+            boardBuilder.Append($"     {column + 1}");
         }
         boardBuilder.AppendLine();
         boardBuilder.Append("--");
@@ -198,7 +249,7 @@ public class Board
         boardBuilder.AppendLine();
         for (int row = 0; row < _rows; row++)
         {
-            boardBuilder.Append($"{row} ");
+            boardBuilder.Append($"{row + 1} ");
             for (int column = 0; column < _columns; column++)
             {
                 boardBuilder.Append($"  |  {_board[row, column]}");

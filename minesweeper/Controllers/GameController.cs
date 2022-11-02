@@ -1,3 +1,4 @@
+using minesweeper.ComparativeTests;
 using minesweeper.Components;
 
 namespace minesweeper.Controllers;
@@ -15,19 +16,15 @@ public class GameController
 
     public void Run()
     {
-        Console.WriteLine("Welcome to Minesweeper");
-        Console.WriteLine("Options");
-        Console.WriteLine(" -1: Play");
-        Console.WriteLine(" -2: Quit");
-        string choice;
-        choice = Console.ReadLine();
-        EvealuateChoice(choice);
         while (_programRunning)
         {
+            Console.WriteLine("Welcome to Minesweeper");
+            Console.WriteLine("");
             Console.WriteLine("Options");
-            Console.WriteLine(" -1: Play Again");
-            Console.WriteLine(" -2: Quit");
-            choice = Console.ReadLine();
+            Console.WriteLine(" -1: Play");
+            Console.WriteLine(" -2: Stats");
+            Console.WriteLine(" -9: Quit");
+            var choice = Console.ReadLine();
             EvealuateChoice(choice);
         }
     }
@@ -40,10 +37,17 @@ public class GameController
                 _game.Play();
                 break;
             case "2":
+                _game.Stats();
+                break;
+            case "3":
+                SpeedTest.Run();
+                break;
+            case "9":
                 _programRunning = false;
                 break;
+            default:
+                Console.WriteLine("Invalid input");
+                break;
         }
-
-        ;
     }
 }

@@ -6,6 +6,8 @@ namespace minesweeper.Components;
 public class Game
 {
     private Board? _board;
+    private int _wins = 0;
+    private int _losses = 0;
     public void Play()
     {
         var height = Int32.Parse(GetInt("Height of the board"));
@@ -19,7 +21,7 @@ public class Game
             var nextMove = GetMove();
             try
             {
-                gameState = _board.PlayMove(nextMove.ToArray());
+                gameState = _board.PlayMoveRecursive(nextMove.ToArray());
                 DisplayBoard();
             }
             catch (InvalidMoveException)
@@ -28,8 +30,25 @@ public class Game
             }
         }
 
-        var endGameMessage = gameState == Constants.GameState.Won ? "Congratulations! You WON!" : "You Lost. Better luck next game!";
+        string endGameMessage;
+        if (gameState == Constants.GameState.Won)
+        {
+            _wins++;
+            endGameMessage = "Congratulations! You WON!";
+        }
+        else
+        {
+            _losses++;
+            endGameMessage = "You Lost. Better luck next game!";
+        }
         Console.WriteLine(endGameMessage);
+    }
+
+    public void Stats()
+    {
+        Console.WriteLine("");
+        Console.WriteLine($"Played: {_wins + _losses}");
+        Console.WriteLine($"Wins: {_wins}, Losses: {_losses}");
     }
 
     private string GetInt(string message)
@@ -51,7 +70,7 @@ public class Game
         
 
         string[] coords = move.Split(",");
-        var moveCoords = coords.Select(x=>Int32.Parse(x));
+        var moveCoords = coords.Select(x=>Int32.Parse(x)).Reverse();
         return moveCoords;
     }
 
@@ -67,9 +86,9 @@ public class Game
         return move;
     }
 
-    private bool ValidInput(string move, Regex pattern)
+    private bool ValidInput(string input, Regex pattern)
     {
-        return pattern.Match(move).Success;
+        return pattern.Match(input).Success;
     }
 
     private void DisplayBoard()
