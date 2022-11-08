@@ -81,8 +81,6 @@ public class Board
         }
     }
 
-
-
     
     public string PlayMoveRecursive(int[] coords)
     {
